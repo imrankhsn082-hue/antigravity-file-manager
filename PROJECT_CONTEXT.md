@@ -11,7 +11,7 @@
 
 - **App Name:** Antigravity Files (Android File Manager)
 - **Package Name:** `com.antigravity.filemanager`
-- **Current Version:** `2.1.0` (versionCode: `3`)
+- **Current Version:** `2.2.0` (versionCode: `4`)
 - **Primary Language:** Kotlin (1.9.24)
 - **UI Toolkit:** Jetpack Compose (Material 3, BOM `2024.06.00`)
 - **Min SDK:** 26 (Android 8.0 Oreo)
@@ -44,7 +44,9 @@ antigravity-file-manager/
 │       └── build-apk.yml              # Automated cloud compilation & release workflow
 ├── app/
 │   ├── build.gradle.kts               # App module build config (Compose, Coil, SDK versions)
+│   ├── proguard-rules.pro             # R8/ProGuard keep rules for the release build
 │   └── src/
+│       ├── test/java/...              # JVM unit tests (FileItem formatting & type detection)
 │       └── main/
 │           ├── AndroidManifest.xml    # App permissions, activities, FileProvider
 │           ├── java/com/antigravity/filemanager/
@@ -86,11 +88,14 @@ antigravity-file-manager/
 │               ├── mipmap-*/                  # Custom high-res app launcher icons (mdpi to xxxhdpi)
 │               ├── mipmap-anydpi-v26/         # Adaptive launcher icon XMLs for Android 8.0+
 │               ├── values/                    # strings.xml, colors.xml, themes.xml, ic_launcher_background.xml
+│               ├── values-night/              # Dark launch theme (prevents white flash before Compose starts)
 │               └── xml/
 │                   └── file_provider_paths.xml# Storage paths for secure file sharing
 ├── build.gradle.kts                   # Root build script
 ├── settings.gradle.kts                # Plugin & repo resolution management
 ├── gradle.properties                  # JVM args & AndroidX flags
+├── gradlew / gradlew.bat              # Gradle wrapper scripts (local builds)
+├── gradle/wrapper/                    # Wrapper JAR + distribution properties (Gradle 8.7)
 ├── PROJECT_CONTEXT.md                 # THIS FILE (AI Assistant architecture guide)
 └── README.md                          # User-facing project documentation
 ```
@@ -148,6 +153,7 @@ antigravity-file-manager/
 ### 10. ⚙️ Settings & Dynamic Theme Engine
 - Supports **Light Mode**, **Dark Mode**, and **System Default**.
 - Persistent toggles for **Show Hidden Files** (`.files`) and default sort preferences.
+- The About section reads the version, package and Android platform from `BuildConfig`/`Build.VERSION` at runtime.
 
 ### 11. 🗂️ Modal Navigation Drawer
 - Left sliding drawer linking to:
@@ -190,7 +196,17 @@ antigravity-file-manager/
 
 ## 🔄 Version Changelog
 
-### v2.1.0 (Current)
+### v2.2.0 (Current)
+- **Fixed search**: the toolbar search button now opens the search field (`openSearch`/`closeSearch`), queries are debounced (250 ms) and stale results are discarded, and hidden-file settings are respected.
+- **Version consistency**: version/package/platform are read from `BuildConfig` and `Build.VERSION` instead of hardcoded UI strings.
+- **CI hardening**: `build-apk.yml` derives the version from `versionName`, names/attaches the APK dynamically, and fails when the release asset is missing.
+- **Performance**: the category breakdown is loaded lazily (no full-storage scan at startup), repository scans are cached for 2 minutes and invalidated on every mutation, folder child counts are lazy, and bookmark lookups no longer touch disk per row.
+- **File operation safety**: copy/move rejects a folder targeting itself or its own subtree; failed cut items stay on the clipboard for retry; the breakdown refreshes after delete/restore/empty-trash.
+- **Hardening**: FileProvider no longer exposes `root-path`; added `app/proguard-rules.pro`; added Gradle wrapper (`gradlew`, `gradlew.bat`, `gradle-wrapper.jar`); added a dark launch theme (`values-night`) and removed unused colors.
+- Process-death resilience: the active screen and text-viewer path use `rememberSaveable`.
+- Added JVM unit tests (`app/src/test`) for size formatting and file type detection, run by CI before packaging.
+
+### v2.1.0
 - Added custom high-resolution Material 3 brand app icon with adaptive mipmap layers.
 - Fixed launcher icon integration in `AndroidManifest.xml`.
 - Updated release pipeline to bundle `Antigravity-Files-v2.1.apk`.

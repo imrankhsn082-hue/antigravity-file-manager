@@ -25,9 +25,17 @@ data class FileItem(
     val size: Long = if (file.isDirectory) 0L else file.length(),
     val lastModified: Long = file.lastModified(),
     val extension: String = file.extension.lowercase(Locale.getDefault()),
-    val childCount: Int = if (file.isDirectory) file.listFiles()?.size ?: 0 else 0,
     val fileType: FileType = determineFileType(file)
 ) {
+    /**
+     * Number of direct children for a directory. Computed lazily because listing a
+     * directory is an expensive disk operation that should not run for every item
+     * that is constructed (e.g. during search or category scans).
+     */
+    val childCount: Int by lazy(LazyThreadSafetyMode.NONE) {
+        if (isDirectory) file.listFiles()?.size ?: 0 else 0
+    }
+
     val formattedSize: String
         get() = if (isDirectory) {
             "$childCount items"

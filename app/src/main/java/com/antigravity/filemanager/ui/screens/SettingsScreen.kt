@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.antigravity.filemanager.BuildConfig
 import com.antigravity.filemanager.data.SortOption
 import com.antigravity.filemanager.data.ThemeMode
 import com.antigravity.filemanager.ui.viewmodel.FileManagerViewModel
@@ -191,9 +192,12 @@ fun SettingsScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     InfoRow(label = "Application", value = "Antigravity Files")
-                    InfoRow(label = "Version", value = "2.0.0")
-                    InfoRow(label = "Package Name", value = "com.antigravity.filemanager")
-                    InfoRow(label = "Platform", value = "Android 14 (API 34)")
+                    InfoRow(label = "Version", value = BuildConfig.VERSION_NAME)
+                    InfoRow(label = "Package Name", value = BuildConfig.APPLICATION_ID)
+                    InfoRow(
+                        label = "Platform",
+                        value = "Android ${android.os.Build.VERSION.RELEASE} (API ${android.os.Build.VERSION.SDK_INT})"
+                    )
                     InfoRow(label = "Architecture", value = "MVVM + Jetpack Compose")
                 }
             }

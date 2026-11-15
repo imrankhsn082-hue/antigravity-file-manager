@@ -24,12 +24,6 @@ class TrashRepository(
     val trashDirectory: File
         get() = File(rootDir, ".Trash")
 
-    init {
-        if (!trashDirectory.exists()) {
-            trashDirectory.mkdirs()
-        }
-    }
-
     suspend fun getTrashItems(): List<TrashItem> = withContext(Dispatchers.IO) {
         val rawJson = prefs.getString(KEY_TRASH_ITEMS, null) ?: return@withContext emptyList()
         try {

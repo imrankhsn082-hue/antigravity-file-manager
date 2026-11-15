@@ -6,7 +6,7 @@ A modern, fast, and feature-rich **Native Android File Manager** built with **Ko
 
 ---
 
-## ✨ Features (v2.1.0)
+## ✨ Features (v2.2.0)
 
 - **🎨 Modern Material 3 UI:** Clean interface with dynamic theming and full Dark/Light/System mode support.
 - **🖼️ Coil Async Thumbnails:** Smooth asynchronous thumbnail loading for images and video previews with play overlay.
@@ -46,6 +46,10 @@ A modern, fast, and feature-rich **Native Android File Manager** built with **Ko
 
 This project is configured with GitHub Actions (`.github/workflows/build-apk.yml`). Every time you push to `main`:
 1. GitHub spins up a Linux VM with JDK 17 & Gradle 8.7.
-2. Compiles the native Android application.
-3. Packages the APK (`Antigravity-Files-v2.0.apk`).
-4. Generates a downloadable **GitHub Artifact** and **GitHub Release (v2.0.0)**!
+2. Reads `versionName` from `app/build.gradle.kts`.
+3. Compiles the native Android application.
+4. Packages the APK (`Antigravity-Files-v<version>.apk`, e.g. `Antigravity-Files-v2.2.0.apk`).
+5. Generates a downloadable **GitHub Artifact** and a **GitHub Release** tagged with that version.
+
+### 🖥️ Local builds
+The Gradle wrapper is included, so `./gradlew assembleDebug` works after cloning (JDK 17 + Android SDK required).

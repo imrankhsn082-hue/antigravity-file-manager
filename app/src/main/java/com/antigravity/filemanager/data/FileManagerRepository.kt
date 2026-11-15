@@ -9,6 +9,7 @@ import com.antigravity.filemanager.model.StorageStats
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 
 enum class SortOption {
     NAME_ASC,
@@ -21,8 +22,36 @@ enum class SortOption {
 
 class FileManagerRepository {
 
+    private data class CategoryCacheEntry(
+        val timestamp: Long,
+        val items: List<FileItem>
+    )
+
+    companion object {
+        /** Scans across the whole storage are expensive, so results are cached briefly. */
+        private const val CACHE_TTL_MS = 2 * 60 * 1000L
+    }
+
+    private val categoryCache = ConcurrentHashMap<FileType, CategoryCacheEntry>()
+
+    @Volatile
+    private var cachedBreakdown: CategoryBreakdown? = null
+
+    @Volatile
+    private var cachedBreakdownTimestamp: Long = 0L
+
     val rootStorageDirectory: File
         get() = Environment.getExternalStorageDirectory()
+
+    /**
+     * Drops cached scan results. Call after any operation that changes the filesystem
+     * (copy, move, rename, delete, restore) so the next scan reflects reality.
+     */
+    fun invalidateCaches() {
+        categoryCache.clear()
+        cachedBreakdown = null
+        cachedBreakdownTimestamp = 0L
+    }
 
     suspend fun getStorageStats(): StorageStats = withContext(Dispatchers.IO) {
         val path = Environment.getExternalStorageDirectory().path
@@ -82,26 +111,29 @@ class FileManagerRepository {
     suspend fun searchFiles(
         directory: File,
         query: String,
-        maxResults: Int = 100
+        maxResults: Int = 100,
+        showHidden: Boolean = false
     ): List<FileItem> = withContext(Dispatchers.IO) {
         if (query.isBlank() || !directory.exists()) return@withContext emptyList()
         val results = mutableListOf<FileItem>()
+        val trimmedQuery = query.trim()
 
-        fun walk(dir: File) {
-            if (results.size >= maxResults) return
+        fun walk(dir: File, depth: Int) {
+            if (results.size >= maxResults || depth > 20) return
             val children = dir.listFiles() ?: return
             for (file in children) {
-                if (file.name.startsWith(".")) continue
-                if (file.name.contains(query, ignoreCase = true)) {
+                if (results.size >= maxResults) return
+                if (!showHidden && file.name.startsWith(".")) continue
+                if (file.name.contains(trimmedQuery, ignoreCase = true)) {
                     results.add(FileItem(file))
                 }
-                if (file.isDirectory && results.size < maxResults) {
-                    walk(file)
+                if (file.isDirectory) {
+                    walk(file, depth + 1)
                 }
             }
         }
 
-        walk(directory)
+        walk(directory, 0)
         results
     }
 
@@ -160,6 +192,9 @@ class FileManagerRepository {
             if (!source.exists()) {
                 return@withContext Result.failure(IllegalArgumentException("Source does not exist"))
             }
+            if (source.isDirectory && isSameOrDescendant(destinationDir, source)) {
+                return@withContext Result.failure(IllegalArgumentException("Cannot copy a folder into itself"))
+            }
             if (!destinationDir.exists()) {
                 destinationDir.mkdirs()
             }
@@ -190,6 +225,9 @@ class FileManagerRepository {
         try {
             if (!source.exists()) {
                 return@withContext Result.failure(IllegalArgumentException("Source does not exist"))
+            }
+            if (source.isDirectory && isSameOrDescendant(destinationDir, source)) {
+                return@withContext Result.failure(IllegalArgumentException("Cannot move a folder into itself"))
             }
             if (!destinationDir.exists()) {
                 destinationDir.mkdirs()
@@ -230,17 +268,22 @@ class FileManagerRepository {
         baseDir: File = rootStorageDirectory,
         maxResults: Int = 200
     ): List<FileItem> = withContext(Dispatchers.IO) {
+        val now = System.currentTimeMillis()
+        categoryCache[category]?.let { cached ->
+            if (now - cached.timestamp < CACHE_TTL_MS) return@withContext cached.items
+        }
+
         val list = mutableListOf<FileItem>()
 
-        fun scan(dir: File) {
-            if (list.size >= maxResults) return
+        fun scan(dir: File, depth: Int) {
+            if (list.size >= maxResults || depth > 20) return
             val children = dir.listFiles() ?: return
             for (child in children) {
                 if (child.name.startsWith(".")) continue
                 if (child.isDirectory) {
                     // Skip Android/data or system folders for performance
                     if (child.name.equals("Android", ignoreCase = true)) continue
-                    scan(child)
+                    scan(child, depth + 1)
                 } else {
                     val item = FileItem(child)
                     if (item.fileType == category) {
@@ -250,11 +293,21 @@ class FileManagerRepository {
             }
         }
 
-        scan(baseDir)
-        list.sortedByDescending { it.lastModified }
+        scan(baseDir, 0)
+        val result = list.sortedByDescending { it.lastModified }
+        categoryCache[category] = CategoryCacheEntry(now, result)
+        result
     }
 
-    suspend fun getCategoryBreakdown(baseDir: File = rootStorageDirectory): CategoryBreakdown = withContext(Dispatchers.IO) {
+    suspend fun getCategoryBreakdown(
+        forceRefresh: Boolean = false,
+        baseDir: File = rootStorageDirectory
+    ): CategoryBreakdown = withContext(Dispatchers.IO) {
+        val now = System.currentTimeMillis()
+        val cached = cachedBreakdown
+        if (!forceRefresh && cached != null && now - cachedBreakdownTimestamp < CACHE_TTL_MS) {
+            return@withContext cached
+        }
         var images = 0L
         var videos = 0L
         var audio = 0L
@@ -290,7 +343,7 @@ class FileManagerRepository {
 
         scan(baseDir)
         val total = images + videos + audio + docs + apks + archives + others
-        CategoryBreakdown(
+        val breakdown = CategoryBreakdown(
             imagesSize = images,
             videosSize = videos,
             audioSize = audio,
@@ -300,5 +353,21 @@ class FileManagerRepository {
             othersSize = others,
             totalTrackedSize = total
         )
+        cachedBreakdown = breakdown
+        cachedBreakdownTimestamp = now
+        breakdown
+    }
+
+    /** True when [candidate] is [source] itself or lives inside it. */
+    private fun isSameOrDescendant(candidate: File, source: File): Boolean {
+        return try {
+            val candidatePath = candidate.canonicalPath
+            val sourcePath = source.canonicalPath
+            candidatePath == sourcePath || candidatePath.startsWith(sourcePath + File.separator)
+        } catch (e: Exception) {
+            val candidatePath = candidate.absolutePath
+            val sourcePath = source.absolutePath
+            candidatePath == sourcePath || candidatePath.startsWith(sourcePath + File.separator)
+        }
     }
 }
