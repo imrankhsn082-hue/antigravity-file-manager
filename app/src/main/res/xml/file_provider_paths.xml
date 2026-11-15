@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Primary shared storage (/storage/emulated/0), where the file manager operates. -->
     <external-path name="external_files" path="." />
-    <root-path name="root" path="." />
+    <!-- App-specific external cache, used for temporary/shared copies. -->
+    <external-cache-path name="external_cache" path="." />
 </paths>

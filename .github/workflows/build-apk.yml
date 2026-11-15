@@ -30,49 +30,62 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Build Debug APK
-        run: gradle assembleDebug --stacktrace
+      - name: Read app version
+        id: version
+        run: |
+          VERSION=$(grep -oP 'versionName\s*=\s*"\K[^"]+' app/build.gradle.kts)
+          if [ -z "$VERSION" ]; then
+            echo "Could not determine versionName from app/build.gradle.kts" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Building Antigravity Files v$VERSION"
+
+      - name: Build Debug APK & run unit tests
+        run: gradle assembleDebug testDebugUnitTest --stacktrace
 
       - name: Prepare APK for Release
         run: |
           mkdir -p build-artifacts
-          cp app/build/outputs/apk/debug/app-debug.apk build-artifacts/Antigravity-Files-v2.1.apk
+          cp app/build/outputs/apk/debug/app-debug.apk \
+            "build-artifacts/Antigravity-Files-v${{ steps.version.outputs.version }}.apk"
           ls -la build-artifacts/
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Antigravity-Files-Debug-APK
-          path: build-artifacts/Antigravity-Files-v2.1.apk
+          path: build-artifacts/*.apk
           retention-days: 30
 
       - name: Create GitHub Release
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v2.1.0
-          name: Antigravity Files v2.1.0
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Antigravity Files v${{ steps.version.outputs.version }}
+          files: build-artifacts/*.apk
+          fail_on_unmatched_files: true
           body: |
-            ## Antigravity Files v2.1.0
+            ## Antigravity Files v${{ steps.version.outputs.version }}
             🚀 **Native Android File Manager** built with Kotlin and Jetpack Compose.
-            
-            ### ✨ What's New in v2.1.0:
-            - **Custom Brand App Icon**: Modern 3D pearlescent folder icon with adaptive icon layers for Android 8.0+.
-            - **Async Image Thumbnails**: Coil 2.6.0 async image loading & video thumbnails with play overlay.
-            - **Multi-Select Mode**: Batch operations (Copy, Move, Share, Delete) with contextual bottom bar.
-            - **Copy / Cut / Paste**: Full clipboard state with top app bar paste action & count badge.
-            - **File Sharing**: FileProvider-backed single & multi-file sharing with external apps.
-            - **Favorites & Bookmarks**: Fast access to favorite directories with dedicated screen.
-            - **Recent Files**: History of last 20 accessed files with quick navigation.
-            - **Recycle Bin (Trash)**: Safe deletion into `.Trash` with restore and permanent delete options.
-            - **Storage Breakdown**: Visual category size distribution card (Images, Videos, Audio, Docs, APKs, etc.).
-            - **Built-in Text Viewer**: High-performance monospace text viewer with scroll & copy-all text.
-            - **Settings Screen**: Theme customization (Light/Dark/System), hidden files toggle, sort order, and app info.
-            - **Navigation Drawer**: Modal drawer for instant navigation between Storage, Favorites, Recents, Trash, and Settings.
-            - **APK Quick Installer**: Built-in APK package installer dialog with file specs and action trigger.
-            - **Copy File Path**: Copy absolute file paths to clipboard in one tap.
-            - **Settings & View Persistence**: Automatic persistence of sort order, grid/list view, and display preferences.
-            - **New File Shortcut**: Quick empty text file creation alongside new folders.
-          files: build-artifacts/Antigravity-Files-v2.0.apk
+
+            ### 🛠️ What's fixed in v2.2.0:
+            - **Search Works Again**: The search button now opens the search field; queries are debounced and stale results are discarded.
+            - **Version Consistency**: The in-app version and platform info are read from the build instead of hardcoded strings.
+            - **CI Reliability**: The release asset name is derived from `versionName`, so the published APK always matches the release.
+            - **Performance**: The category breakdown no longer scans the whole storage on startup; scans are cached and refreshed on demand.
+            - **Smoother Lists**: Bookmark checks no longer hit disk per row, and folder child counts are computed lazily.
+            - **Safer File Operations**: Copy/move rejects pasting a folder into itself, and failed cut items stay on the clipboard for retry.
+            - **Hardening**: Removed the over-broad `root-path` from the FileProvider and added a real `proguard-rules.pro`.
+
+            ### ✨ Feature Highlights:
+            - Multi-select batch operations (copy, cut/move, share, delete)
+            - Favorites, Recent files, and a safe Recycle Bin with restore
+            - Async Coil image/video thumbnails
+            - Storage overview with per-category breakdown
+            - Built-in monospace text viewer
+            - Light/Dark/System theming, hidden files toggle, persistent sort & layout
+            - APK quick installer, copy-path, and quick file/folder creation
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

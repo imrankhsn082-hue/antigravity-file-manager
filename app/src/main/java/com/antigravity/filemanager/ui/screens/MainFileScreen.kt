@@ -19,12 +19,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import com.antigravity.filemanager.BuildConfig
 import com.antigravity.filemanager.data.SortOption
 import com.antigravity.filemanager.model.FileItem
 import com.antigravity.filemanager.ui.components.*
@@ -56,8 +58,8 @@ fun MainFileScreen(
     val coroutineScope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
-    var currentScreen by remember { mutableStateOf(AppScreen.FILES) }
-    var textViewerPath by remember { mutableStateOf<String?>(null) }
+    var currentScreen by rememberSaveable { mutableStateOf(AppScreen.FILES) }
+    var textViewerPath by rememberSaveable { mutableStateOf<String?>(null) }
     var apkToInstall by remember { mutableStateOf<FileItem?>(null) }
 
     var showCreateFolderDialog by remember { mutableStateOf(false) }
@@ -137,7 +139,7 @@ fun MainFileScreen(
                             style = MaterialTheme.typography.titleLarge
                         )
                         Text(
-                            text = "v2.0.0",
+                            text = "v${BuildConfig.VERSION_NAME}",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -331,7 +333,7 @@ fun MainFileScreen(
                                     }
 
                                     if (!uiState.isSearching) {
-                                        IconButton(onClick = { viewModel.onSearchQueryChanged(" ") }) {
+                                        IconButton(onClick = viewModel::openSearch) {
                                             Icon(Icons.Default.Search, contentDescription = "Search")
                                         }
                                     }
@@ -493,6 +495,7 @@ fun MainFileScreen(
                     ) {
                         // Storage card & Breakdown on Root folder
                         if (uiState.currentDirectory == viewModel.rootDirectory && uiState.selectedCategory == null && !uiState.isSearching) {
+                            LaunchedEffect(Unit) { viewModel.ensureCategoryBreakdownLoaded() }
                             StorageCard(storageStats = uiState.storageStats)
                             StorageBreakdownCard(
                                 breakdown = uiState.categoryBreakdown,
@@ -517,7 +520,8 @@ fun MainFileScreen(
                             )
                         }
 
-                        val displayItems = if (uiState.isSearching) uiState.searchResults else uiState.items
+                        val isShowingSearchResults = uiState.isSearching && uiState.searchQuery.isNotBlank()
+                        val displayItems = if (isShowingSearchResults) uiState.searchResults else uiState.items
 
                         if (uiState.isLoading) {
                             Box(
@@ -542,7 +546,11 @@ fun MainFileScreen(
                                     )
                                     Spacer(modifier = Modifier.height(16.dp))
                                     Text(
-                                        text = if (uiState.isSearching) "No files match your search" else "This folder is empty",
+                                        text = when {
+                                            isShowingSearchResults -> "No files match your search"
+                                            uiState.isSearching -> "Type to search files and folders"
+                                            else -> "This folder is empty"
+                                        },
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         textAlign = TextAlign.Center
@@ -583,7 +591,7 @@ fun MainFileScreen(
                                 ) {
                                     items(displayItems, key = { it.path }) { item ->
                                         val isSelected = uiState.selectedItems.contains(item.path)
-                                        val isBookmarked = viewModel.isBookmarked(item.path)
+                                        val isBookmarked = uiState.bookmarks.contains(item.path)
                                         FileListItem(
                                             item = item,
                                             isMultiSelectMode = uiState.isMultiSelectMode,
