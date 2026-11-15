@@ -36,34 +36,42 @@ jobs:
       - name: Prepare APK for Release
         run: |
           mkdir -p build-artifacts
-          cp app/build/outputs/apk/debug/app-debug.apk build-artifacts/Antigravity-Files-v1.0.apk
+          cp app/build/outputs/apk/debug/app-debug.apk build-artifacts/Antigravity-Files-v2.0.apk
           ls -la build-artifacts/
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Antigravity-Files-Debug-APK
-          path: build-artifacts/Antigravity-Files-v1.0.apk
+          path: build-artifacts/Antigravity-Files-v2.0.apk
           retention-days: 30
 
       - name: Create GitHub Release
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.0
-          name: Antigravity Files v1.0.0
+          tag_name: v2.0.0
+          name: Antigravity Files v2.0.0
           body: |
-            ## Antigravity Files v1.0.0
+            ## Antigravity Files v2.0.0
             🚀 **Native Android File Manager** built with Kotlin and Jetpack Compose.
             
-            ### ✨ Features:
-            - **Material 3 Design**: Modern Material You interface with Dark and Light mode support.
-            - **Storage Overview**: Visual internal storage capacity and usage bar.
-            - **Category Filtering**: Quick view for Images, Videos, Audio, Documents, APKs, and Archives.
-            - **Breadcrumbs Navigation**: Easily jump up and down the folder tree.
-            - **File Operations**: Create folders, rename, delete, and view file details.
-            - **Search & Sort**: Fast filename search and flexible sorting (Name, Date, Size).
-            - **Grid & List Views**: Toggle between compact list and responsive grid layouts.
-          files: build-artifacts/Antigravity-Files-v1.0.apk
+            ### ✨ What's New in v2.0.0:
+            - **Async Image Thumbnails**: Coil 2.6.0 async image loading & video thumbnails with play overlay.
+            - **Multi-Select Mode**: Batch operations (Copy, Move, Share, Delete) with contextual bottom bar.
+            - **Copy / Cut / Paste**: Full clipboard state with top app bar paste action & count badge.
+            - **File Sharing**: FileProvider-backed single & multi-file sharing with external apps.
+            - **Favorites & Bookmarks**: Fast access to favorite directories with dedicated screen.
+            - **Recent Files**: History of last 20 accessed files with quick navigation.
+            - **Recycle Bin (Trash)**: Safe deletion into `.Trash` with restore and permanent delete options.
+            - **Storage Breakdown**: Visual category size distribution card (Images, Videos, Audio, Docs, APKs, etc.).
+            - **Built-in Text Viewer**: High-performance monospace text viewer with scroll & copy-all text.
+            - **Settings Screen**: Theme customization (Light/Dark/System), hidden files toggle, sort order, and app info.
+            - **Navigation Drawer**: Modal drawer for instant navigation between Storage, Favorites, Recents, Trash, and Settings.
+            - **APK Quick Installer**: Built-in APK package installer dialog with file specs and action trigger.
+            - **Copy File Path**: Copy absolute file paths to clipboard in one tap.
+            - **Settings & View Persistence**: Automatic persistence of sort order, grid/list view, and display preferences.
+            - **New File Shortcut**: Quick empty text file creation alongside new folders.
+          files: build-artifacts/Antigravity-Files-v2.0.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

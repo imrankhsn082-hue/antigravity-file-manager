@@ -13,11 +13,13 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import com.antigravity.filemanager.data.ThemeMode
 import com.antigravity.filemanager.ui.components.PermissionScreen
 import com.antigravity.filemanager.ui.screens.MainFileScreen
 import com.antigravity.filemanager.ui.theme.AntigravityFilesTheme
@@ -47,7 +49,14 @@ class MainActivity : ComponentActivity() {
         hasPermissionState = checkStoragePermission()
 
         setContent {
-            AntigravityFilesTheme {
+            val uiState by viewModel.uiState.collectAsState()
+            val isDarkTheme = when (uiState.themeMode) {
+                ThemeMode.SYSTEM -> isSystemInDarkTheme()
+                ThemeMode.LIGHT -> false
+                ThemeMode.DARK -> true
+            }
+
+            AntigravityFilesTheme(darkTheme = isDarkTheme) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     if (hasPermissionState) {
                         MainFileScreen(viewModel = viewModel)

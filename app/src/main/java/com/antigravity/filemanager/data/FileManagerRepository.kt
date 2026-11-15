@@ -2,6 +2,7 @@ package com.antigravity.filemanager.data
 
 import android.os.Environment
 import android.os.StatFs
+import com.antigravity.filemanager.model.CategoryBreakdown
 import com.antigravity.filemanager.model.FileItem
 import com.antigravity.filemanager.model.FileType
 import com.antigravity.filemanager.model.StorageStats
@@ -115,6 +116,21 @@ class FileManagerRepository {
         if (success) Result.success(target) else Result.failure(Exception("Failed to create folder"))
     }
 
+    suspend fun createFile(parent: File, fileName: String): Result<File> = withContext(Dispatchers.IO) {
+        val trimmed = fileName.trim()
+        if (trimmed.isEmpty()) return@withContext Result.failure(IllegalArgumentException("File name cannot be empty"))
+        val target = File(parent, trimmed)
+        if (target.exists()) {
+            return@withContext Result.failure(IllegalStateException("File already exists"))
+        }
+        try {
+            val created = target.createNewFile()
+            if (created) Result.success(target) else Result.failure(Exception("Failed to create file"))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun renameFile(target: File, newName: String): Result<File> = withContext(Dispatchers.IO) {
         val trimmed = newName.trim()
         if (trimmed.isEmpty()) return@withContext Result.failure(IllegalArgumentException("Name cannot be empty"))
@@ -134,6 +150,76 @@ class FileManagerRepository {
                 target.delete()
             }
             if (success) Result.success(true) else Result.failure(Exception("Failed to delete file"))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun copyFileOrDirectory(source: File, destinationDir: File): Result<File> = withContext(Dispatchers.IO) {
+        try {
+            if (!source.exists()) {
+                return@withContext Result.failure(IllegalArgumentException("Source does not exist"))
+            }
+            if (!destinationDir.exists()) {
+                destinationDir.mkdirs()
+            }
+
+            var destFile = File(destinationDir, source.name)
+            if (destFile.exists()) {
+                val base = source.nameWithoutExtension
+                val ext = if (source.extension.isNotEmpty()) ".${source.extension}" else ""
+                var counter = 1
+                while (destFile.exists()) {
+                    destFile = File(destinationDir, "${base}_copy$counter$ext")
+                    counter++
+                }
+            }
+
+            if (source.isDirectory) {
+                source.copyRecursively(destFile, overwrite = false)
+            } else {
+                source.copyTo(destFile, overwrite = false)
+            }
+            Result.success(destFile)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun moveFileOrDirectory(source: File, destinationDir: File): Result<File> = withContext(Dispatchers.IO) {
+        try {
+            if (!source.exists()) {
+                return@withContext Result.failure(IllegalArgumentException("Source does not exist"))
+            }
+            if (!destinationDir.exists()) {
+                destinationDir.mkdirs()
+            }
+
+            var destFile = File(destinationDir, source.name)
+            if (destFile.exists() && destFile.absolutePath != source.absolutePath) {
+                val base = source.nameWithoutExtension
+                val ext = if (source.extension.isNotEmpty()) ".${source.extension}" else ""
+                var counter = 1
+                while (destFile.exists()) {
+                    destFile = File(destinationDir, "${base}_copy$counter$ext")
+                    counter++
+                }
+            }
+
+            val moved = source.renameTo(destFile)
+            if (moved) {
+                Result.success(destFile)
+            } else {
+                // Fallback across filesystems
+                if (source.isDirectory) {
+                    source.copyRecursively(destFile, overwrite = true)
+                    source.deleteRecursively()
+                } else {
+                    source.copyTo(destFile, overwrite = true)
+                    source.delete()
+                }
+                Result.success(destFile)
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -166,5 +252,53 @@ class FileManagerRepository {
 
         scan(baseDir)
         list.sortedByDescending { it.lastModified }
+    }
+
+    suspend fun getCategoryBreakdown(baseDir: File = rootStorageDirectory): CategoryBreakdown = withContext(Dispatchers.IO) {
+        var images = 0L
+        var videos = 0L
+        var audio = 0L
+        var docs = 0L
+        var apks = 0L
+        var archives = 0L
+        var others = 0L
+
+        fun scan(dir: File, depth: Int = 0) {
+            if (depth > 6) return
+            val children = dir.listFiles() ?: return
+            for (child in children) {
+                if (child.name.startsWith(".")) continue
+                if (child.isDirectory) {
+                    if (child.name.equals("Android", ignoreCase = true)) continue
+                    if (child.name.equals(".Trash", ignoreCase = true)) continue
+                    scan(child, depth + 1)
+                } else {
+                    val len = child.length()
+                    val item = FileItem(child)
+                    when (item.fileType) {
+                        FileType.IMAGE -> images += len
+                        FileType.VIDEO -> videos += len
+                        FileType.AUDIO -> audio += len
+                        FileType.DOCUMENT -> docs += len
+                        FileType.APK -> apks += len
+                        FileType.ARCHIVE -> archives += len
+                        else -> others += len
+                    }
+                }
+            }
+        }
+
+        scan(baseDir)
+        val total = images + videos + audio + docs + apks + archives + others
+        CategoryBreakdown(
+            imagesSize = images,
+            videosSize = videos,
+            audioSize = audio,
+            docsSize = docs,
+            apksSize = apks,
+            archivesSize = archives,
+            othersSize = others,
+            totalTrackedSize = total
+        )
     }
 }

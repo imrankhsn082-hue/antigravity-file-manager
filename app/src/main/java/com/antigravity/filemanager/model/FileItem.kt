@@ -41,6 +41,21 @@ data class FileItem(
             return sdf.format(Date(lastModified))
         }
 
+    val isTextFile: Boolean
+        get() {
+            if (isDirectory) return false
+            val textExtensions = setOf(
+                "txt", "md", "markdown", "json", "xml", "html", "htm", "css", "js", "ts",
+                "kt", "kts", "java", "py", "sh", "bash", "c", "cpp", "h", "hpp", "cs",
+                "rb", "go", "rs", "php", "sql", "yaml", "yml", "ini", "conf", "properties",
+                "gradle", "log", "csv", "tsv"
+            )
+            return extension in textExtensions
+        }
+
+    val isApkFile: Boolean
+        get() = !isDirectory && (extension == "apk" || fileType == FileType.APK)
+
     companion object {
         fun formatFileSize(bytes: Long): String {
             if (bytes <= 0) return "0 B"
