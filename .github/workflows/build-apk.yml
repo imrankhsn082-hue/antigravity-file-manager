@@ -1,0 +1,69 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Debug APK
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Build Debug APK
+        run: gradle assembleDebug --stacktrace
+
+      - name: Prepare APK for Release
+        run: |
+          mkdir -p build-artifacts
+          cp app/build/outputs/apk/debug/app-debug.apk build-artifacts/Antigravity-Files-v1.0.apk
+          ls -la build-artifacts/
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Antigravity-Files-Debug-APK
+          path: build-artifacts/Antigravity-Files-v1.0.apk
+          retention-days: 30
+
+      - name: Create GitHub Release
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0
+          name: Antigravity Files v1.0.0
+          body: |
+            ## Antigravity Files v1.0.0
+            🚀 **Native Android File Manager** built with Kotlin and Jetpack Compose.
+            
+            ### ✨ Features:
+            - **Material 3 Design**: Modern Material You interface with Dark and Light mode support.
+            - **Storage Overview**: Visual internal storage capacity and usage bar.
+            - **Category Filtering**: Quick view for Images, Videos, Audio, Documents, APKs, and Archives.
+            - **Breadcrumbs Navigation**: Easily jump up and down the folder tree.
+            - **File Operations**: Create folders, rename, delete, and view file details.
+            - **Search & Sort**: Fast filename search and flexible sorting (Name, Date, Size).
+            - **Grid & List Views**: Toggle between compact list and responsive grid layouts.
+          files: build-artifacts/Antigravity-Files-v1.0.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
