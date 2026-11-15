@@ -56,6 +56,10 @@ data class FileManagerUiState(
     val bookmarks: List<String> = emptyList(),
     // Recent files
     val recentFiles: List<FileItem> = emptyList(),
+    // Recent media shown in the home "stories" carousel
+    val recentMedia: List<FileItem> = emptyList(),
+    val isRecentMediaLoading: Boolean = false,
+    val hasLoadedRecentMedia: Boolean = false,
     // Trash items
     val trashItems: List<TrashItem> = emptyList()
 )
@@ -133,6 +137,34 @@ class FileManagerViewModel @JvmOverloads constructor(
     private fun refreshBreakdownIfLoaded() {
         if (_uiState.value.categoryBreakdown != null) {
             loadCategoryBreakdown(forceRefresh = true)
+        }
+    }
+
+    /** Loads the home "stories" carousel media once per session (or on demand). */
+    fun ensureRecentMediaLoaded(forceRefresh: Boolean = false) {
+        val state = _uiState.value
+        if (state.isRecentMediaLoading) return
+        if (!forceRefresh && state.hasLoadedRecentMedia) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isRecentMediaLoading = true) }
+            val media = try {
+                repository.getRecentMedia()
+            } catch (e: Exception) {
+                emptyList()
+            }
+            _uiState.update {
+                it.copy(
+                    recentMedia = media,
+                    isRecentMediaLoading = false,
+                    hasLoadedRecentMedia = true
+                )
+            }
+        }
+    }
+
+    private fun refreshMediaIfLoaded() {
+        if (_uiState.value.hasLoadedRecentMedia) {
+            ensureRecentMediaLoaded(forceRefresh = true)
         }
     }
 
@@ -470,6 +502,7 @@ class FileManagerViewModel @JvmOverloads constructor(
             loadCurrentDirectory()
             refreshStorageStats()
             refreshBreakdownIfLoaded()
+            refreshMediaIfLoaded()
         }
     }
 
@@ -496,6 +529,7 @@ class FileManagerViewModel @JvmOverloads constructor(
                 refreshStorageStats()
                 loadTrash()
                 refreshBreakdownIfLoaded()
+                refreshMediaIfLoaded()
             }.onFailure {
                 _messageEvents.emit("Failed to move to Recycle Bin: ${it.localizedMessage}")
             }
@@ -518,6 +552,7 @@ class FileManagerViewModel @JvmOverloads constructor(
             refreshStorageStats()
             loadTrash()
             refreshBreakdownIfLoaded()
+            refreshMediaIfLoaded()
         }
     }
 
@@ -531,6 +566,7 @@ class FileManagerViewModel @JvmOverloads constructor(
                 loadCurrentDirectory()
                 refreshStorageStats()
                 refreshBreakdownIfLoaded()
+                refreshMediaIfLoaded()
             }.onFailure {
                 _messageEvents.emit("Failed to restore: ${it.localizedMessage}")
             }
@@ -546,6 +582,7 @@ class FileManagerViewModel @JvmOverloads constructor(
                 loadTrash()
                 refreshStorageStats()
                 refreshBreakdownIfLoaded()
+                refreshMediaIfLoaded()
             }.onFailure {
                 _messageEvents.emit("Failed to delete permanently: ${it.localizedMessage}")
             }
@@ -561,6 +598,7 @@ class FileManagerViewModel @JvmOverloads constructor(
                 loadTrash()
                 refreshStorageStats()
                 refreshBreakdownIfLoaded()
+                refreshMediaIfLoaded()
             }.onFailure {
                 _messageEvents.emit("Failed to empty Recycle Bin: ${it.localizedMessage}")
             }

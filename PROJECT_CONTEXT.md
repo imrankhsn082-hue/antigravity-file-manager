@@ -11,7 +11,7 @@
 
 - **App Name:** Antigravity Files (Android File Manager)
 - **Package Name:** `com.antigravity.filemanager`
-- **Current Version:** `2.2.0` (versionCode: `4`)
+- **Current Version:** `2.3.0` (versionCode: `5`)
 - **Primary Language:** Kotlin (1.9.24)
 - **UI Toolkit:** Jetpack Compose (Material 3, BOM `2024.06.00`)
 - **Min SDK:** 26 (Android 8.0 Oreo)
@@ -51,6 +51,7 @@ antigravity-file-manager/
 │           ├── AndroidManifest.xml    # App permissions, activities, FileProvider
 │           ├── java/com/antigravity/filemanager/
 │           │   ├── MainActivity.kt    # Root activity, permission handling, theme wrapper
+│           │   ├── AntigravityApp.kt  # Application + global Coil image loader (video frame decoder)
 │           │   ├── model/
 │           │   │   ├── FileItem.kt    # Core file model, file types, formatters
 │           │   │   ├── StorageStats.kt# Disk space usage calculations (total/used/free)
@@ -68,6 +69,7 @@ antigravity-file-manager/
 │           │   │   │   ├── CategoryChips.kt       # Quick media filter chips
 │           │   │   │   ├── FileActionDialogs.kt   # Dialogs (New Folder, New File, Rename, Delete, APK Install)
 │           │   │   │   ├── FileListItem.kt        # List & Grid item layouts with thumbnails & 3-dot menus
+│           │   │   │   ├── HomeDashboard.kt       # Home: media stories row, category grid, collections, storage tiles
 │           │   │   │   ├── PermissionScreen.kt    # Android 11+ storage permission onboarding
 │           │   │   │   ├── StorageBreakdownCard.kt# Proportional visual category size distribution bar
 │           │   │   │   └── StorageCard.kt         # Internal storage usage overview card
@@ -107,7 +109,7 @@ antigravity-file-manager/
 ### 1. 🖼️ Async Image & Video Thumbnails (Coil 2.6.0)
 - Uses `io.coil-kt:coil-compose` for memory-efficient async thumbnail caching.
 - Shows real image previews for JPEG, PNG, WEBP, GIF, SVG.
-- Video files display previews with an overlay play badge.
+- Video files display real frame previews via `io.coil-kt:coil-video` (`VideoFrameDecoder`), registered globally in `AntigravityApp` (`ImageLoaderFactory`), with an overlay play badge.
 - Color-coded icons serve as fallback for documents, code, archives, and APKs.
 
 ### 2. ☑️ Multi-Select Batch Operations
@@ -181,6 +183,15 @@ antigravity-file-manager/
 - Scaled for all densities: `mdpi` (48px), `hdpi` (72px), `xhdpi` (96px), `xxhdpi` (144px), `xxxhdpi` (192px).
 - Adaptive launcher icons (`anydpi-v26`) with separate foreground and background layers.
 
+### 17. 🏠 Stories-Style Home Dashboard (v2.3.0)
+- The app opens on a dedicated dashboard (`showDashboard` state in `MainFileScreen`) instead of the raw folder list.
+- **Recent media stories row**: horizontally scrolling 166×218dp rounded cards built from `repository.getRecentMedia()` (scans `DCIM`, `Pictures`, `Screenshots`, `Download`, `Movies`; max 3 levels / 4000 entries, sorted newest first). Cards show a cover thumbnail, filename, parent folder or a **Downloaded** badge, a per-card play badge for videos and a 3-dot menu.
+- **Categories grid**: two-column tiles for Downloads, Images, Videos, Audio, Documents and Apps with live sizes from `CategoryBreakdown` (now includes `downloadsSize`). Media/Apps tiles open the category filter, Downloads opens the `Download` folder.
+- **Collections**: Starred (Favorites screen) and Recycle Bin.
+- **All storage**: Internal storage (free space, opens the folder list) and Other storage (system + other apps).
+- Centered blue pill FAB with **New folder** and **New file** actions; `HomeHeader` offers menu, search and settings.
+- The folder list itself keeps a top bar with back-to-home, grid/list toggle, sort menu and overflow menu (search, paste, settings).
+
 ---
 
 ## 🔒 Permissions Handled
@@ -196,7 +207,15 @@ antigravity-file-manager/
 
 ## 🔄 Version Changelog
 
-### v2.2.0 (Current)
+### v2.3.0 (Current)
+- **New home dashboard** modelled on the reference design: stories-style recent media carousel (`HomeDashboard.kt`), two-column Categories grid (Downloads / Images / Videos / Audio / Documents / Apps with live sizes), Collections (Starred, Recycle Bin) and an All storage section (Internal storage, Other storage).
+- **Centered action pill** on the home screen with New folder / New file, plus a minimal home header (menu, search, settings).
+- **Redesigned folder list** (`FileListItem`): 56dp rounded-square icon/thumbnail tiles, bold filenames and relative timestamps ("34 minutes ago", "Aug 5") via `FileItem.relativeDate`; top bar with back-to-home, grid/list, sort and overflow menus.
+- **Real video thumbnails** everywhere via `coil-video` (`VideoFrameDecoder`) registered in the new `AntigravityApp` application class.
+- **New data**: `FileManagerRepository.getRecentMedia()`, downloads-size tracking in `CategoryBreakdown.downloadsSize`, `FolderLavender` accent, and `recentMedia` state cached in `FileManagerViewModel` (`ensureRecentMediaLoaded` / `refreshMediaIfLoaded`).
+- Navigation: Home ⇄ folder list is a `showDashboard` flag; system back returns home before exiting.
+
+### v2.2.0
 - **Fixed search**: the toolbar search button now opens the search field (`openSearch`/`closeSearch`), queries are debounced (250 ms) and stale results are discarded, and hidden-file settings are respected.
 - **Version consistency**: version/package/platform are read from `BuildConfig` and `Build.VERSION` instead of hardcoded UI strings.
 - **CI hardening**: `build-apk.yml` derives the version from `versionName`, names/attaches the APK dynamically, and fails when the release asset is missing.

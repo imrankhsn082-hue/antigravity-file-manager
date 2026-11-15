@@ -49,6 +49,10 @@ data class FileItem(
             return sdf.format(Date(lastModified))
         }
 
+    /** Compact, human friendly timestamp used by the new home/list design. */
+    val relativeDate: String
+        get() = formatRelativeTime(lastModified)
+
     val isTextFile: Boolean
         get() {
             if (isDirectory) return false
@@ -86,6 +90,27 @@ data class FileItem(
                 "apk", "apks", "xapk" -> FileType.APK
                 "kt", "java", "json", "xml", "html", "css", "js", "ts", "py", "sh", "c", "cpp", "md" -> FileType.CODE
                 else -> FileType.OTHER
+            }
+        }
+
+        /** e.g. "Just now", "34 minutes ago", "Aug 5". */
+        fun formatRelativeTime(timestamp: Long): String {
+            if (timestamp <= 0L) return ""
+            val now = System.currentTimeMillis()
+            val diff = now - timestamp
+            if (diff < 0) {
+                return SimpleDateFormat("MMM d", Locale.getDefault()).format(Date(timestamp))
+            }
+            val minutes = diff / 60_000
+            val hours = diff / 3_600_000
+            val days = diff / 86_400_000
+            return when {
+                minutes < 1 -> "Just now"
+                minutes < 60 -> "$minutes ${if (minutes == 1L) "minute" else "minutes"} ago"
+                hours < 24 -> "$hours ${if (hours == 1L) "hour" else "hours"} ago"
+                days < 7 -> "$days ${if (days == 1L) "day" else "days"} ago"
+                days < 365 -> SimpleDateFormat("MMM d", Locale.getDefault()).format(Date(timestamp))
+                else -> SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(timestamp))
             }
         }
     }

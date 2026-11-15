@@ -70,14 +70,13 @@ jobs:
             ## Antigravity Files v${{ steps.version.outputs.version }}
             🚀 **Native Android File Manager** built with Kotlin and Jetpack Compose.
 
-            ### 🛠️ What's fixed in v2.2.0:
-            - **Search Works Again**: The search button now opens the search field; queries are debounced and stale results are discarded.
-            - **Version Consistency**: The in-app version and platform info are read from the build instead of hardcoded strings.
-            - **CI Reliability**: The release asset name is derived from `versionName`, so the published APK always matches the release.
-            - **Performance**: The category breakdown no longer scans the whole storage on startup; scans are cached and refreshed on demand.
-            - **Smoother Lists**: Bookmark checks no longer hit disk per row, and folder child counts are computed lazily.
-            - **Safer File Operations**: Copy/move rejects pasting a folder into itself, and failed cut items stay on the clipboard for retry.
-            - **Hardening**: Removed the over-broad `root-path` from the FileProvider and added a real `proguard-rules.pro`.
+            ### 🎨 What's new in v2.3.0:
+            - **Stories-Style Home Screen**: A new dashboard with a horizontal recent-media carousel (rounded cards, filename, parent folder or **Downloaded** badge, play badge for videos, 3-dot menu).
+            - **Categories Grid**: Downloads, Images, Videos, Audio, Documents and Apps tiles with live sizes, opening the matching filter or folder.
+            - **Collections & All Storage**: Starred (Favorites), Recycle Bin, Internal storage and Other storage at a glance.
+            - **Redesigned Folder List**: 56dp rounded-square thumbnails, bold filenames and relative timestamps, plus a compact top bar (back-to-home, grid/list, sort, overflow).
+            - **Center Action Pill**: One centered blue pill for New folder and New file on the home screen.
+            - **Real Video Thumbnails**: `coil-video` frame decoding registered globally, so video cards show actual previews.
 
             ### ✨ Feature Highlights:
             - Multi-select batch operations (copy, cut/move, share, delete)

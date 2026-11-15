@@ -8,6 +8,7 @@ data class CategoryBreakdown(
     val apksSize: Long = 0L,
     val archivesSize: Long = 0L,
     val othersSize: Long = 0L,
+    val downloadsSize: Long = 0L,
     val totalTrackedSize: Long = 0L
 ) {
     val formattedImages: String get() = FileItem.formatFileSize(imagesSize)
@@ -17,5 +18,6 @@ data class CategoryBreakdown(
     val formattedApks: String get() = FileItem.formatFileSize(apksSize)
     val formattedArchives: String get() = FileItem.formatFileSize(archivesSize)
     val formattedOthers: String get() = FileItem.formatFileSize(othersSize)
+    val formattedDownloads: String get() = FileItem.formatFileSize(downloadsSize)
     val formattedTotal: String get() = FileItem.formatFileSize(totalTrackedSize)
 }

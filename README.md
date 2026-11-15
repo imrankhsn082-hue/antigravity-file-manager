@@ -6,10 +6,13 @@ A modern, fast, and feature-rich **Native Android File Manager** built with **Ko
 
 ---
 
-## ✨ Features (v2.2.0)
+## ✨ Features (v2.3.0)
 
+- **🏠 Stories-Style Home Dashboard:** The app opens on a redesigned home with a horizontally scrolling recent-media carousel (rounded cards, filename, parent folder or **Downloaded** badge, play badge for videos, 3-dot menu), a two-column **Categories** grid (Downloads, Images, Videos, Audio, Documents, Apps with live sizes), **Collections** (Starred, Recycle Bin) and an **All storage** section (Internal storage, Other storage).
+- **🎯 Center Action Pill:** One centered blue pill FAB on the home screen for **New folder** and **New file**.
+- **📁 Redesigned Folder List:** 56dp rounded-square icon/thumbnail tiles, bold filenames, relative timestamps ("34 minutes ago", "Aug 5"), and a compact top bar with back-to-home, grid/list, sort and overflow menus.
 - **🎨 Modern Material 3 UI:** Clean interface with dynamic theming and full Dark/Light/System mode support.
-- **🖼️ Coil Async Thumbnails:** Smooth asynchronous thumbnail loading for images and video previews with play overlay.
+- **🖼️ Coil Async Thumbnails:** Smooth asynchronous thumbnails for images and **real video frames** (`coil-video`), with a play overlay.
 - **☑️ Multi-Select Batch Operations:** Long-press to enter multi-select mode. Batch copy, cut/move, share, and delete.
 - **📋 Copy / Cut / Paste:** Global clipboard state with paste button, count badge, and folder traversal.
 - **📤 Native File Sharing:** Share single or multiple files seamlessly via Android `FileProvider`.
@@ -34,7 +37,7 @@ A modern, fast, and feature-rich **Native Android File Manager** built with **Ko
 
 - **Language:** Kotlin (1.9.24)
 - **UI Framework:** Jetpack Compose (Material 3, BOM 2024.06.00)
-- **Image Loading:** Coil Compose (2.6.0)
+- **Image Loading:** Coil Compose + Coil Video (2.6.0)
 - **Architecture:** MVVM (Model-View-ViewModel) with Kotlin Coroutines & StateFlow
 - **Minimum SDK:** Android 8.0 (API 26)
 - **Target / Compile SDK:** Android 14 (API 34)
@@ -48,7 +51,7 @@ This project is configured with GitHub Actions (`.github/workflows/build-apk.yml
 1. GitHub spins up a Linux VM with JDK 17 & Gradle 8.7.
 2. Reads `versionName` from `app/build.gradle.kts`.
 3. Compiles the native Android application.
-4. Packages the APK (`Antigravity-Files-v<version>.apk`, e.g. `Antigravity-Files-v2.2.0.apk`).
+4. Packages the APK (`Antigravity-Files-v<version>.apk`, e.g. `Antigravity-Files-v2.3.0.apk`).
 5. Generates a downloadable **GitHub Artifact** and a **GitHub Release** tagged with that version.
 
 ### 🖥️ Local builds
