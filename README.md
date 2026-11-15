@@ -2,9 +2,11 @@
 
 A modern, fast, and feature-rich **Native Android File Manager** built with **Kotlin** and **Jetpack Compose (Material 3)**.
 
+> 📖 **Developer & AI Assistant Guide:** See [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md) for full architectural documentation, codebase structure, and strict maintenance rules.
+
 ---
 
-## ✨ Features (v2.0.0)
+## ✨ Features (v2.1.0)
 
 - **🎨 Modern Material 3 UI:** Clean interface with dynamic theming and full Dark/Light/System mode support.
 - **🖼️ Coil Async Thumbnails:** Smooth asynchronous thumbnail loading for images and video previews with play overlay.
