@@ -11,7 +11,7 @@
 
 - **App Name:** Antigravity Files (Android File Manager)
 - **Package Name:** `com.antigravity.filemanager`
-- **Current Version:** `2.3.0` (versionCode: `5`)
+- **Current Version:** `2.4.0` (versionCode: `6`)
 - **Primary Language:** Kotlin (1.9.24)
 - **UI Toolkit:** Jetpack Compose (Material 3, BOM `2024.06.00`)
 - **Min SDK:** 26 (Android 8.0 Oreo)
@@ -72,10 +72,15 @@ antigravity-file-manager/
 │           │   │   │   ├── HomeDashboard.kt       # Home: media stories row, category grid, collections, storage tiles
 │           │   │   │   ├── PermissionScreen.kt    # Android 11+ storage permission onboarding
 │           │   │   │   ├── StorageBreakdownCard.kt# Proportional visual category size distribution bar
-│           │   │   │   └── StorageCard.kt         # Internal storage usage overview card
+│           │   │   │   ├── StorageCard.kt         # Internal storage usage overview card
+│           │   │   │   └── ViewerChrome.kt        # Shared viewer top bar, overflow menu, share/print helpers
 │           │   │   ├── screens/
-│           │   │   │   ├── MainFileScreen.kt      # Primary dashboard, Drawer, Multi-select bar, FABs
-│           │   │   │   ├── BookmarksScreen.kt     # Starred/Favorited folders screen
+│           │   │   │   ├── MainFileScreen.kt      # Primary dashboard, Drawer, Multi-select bar, FABs, file routing
+│           │   │   │   ├── ImageViewerScreen.kt   # Full screen image viewer (pinch zoom, pan, rotate, edit, print)
+│           │   │   │   ├── AudioPlayerScreen.kt   # In-app audio player (artwork, playlist, shuffle, repeat, speed)
+│           │   │   │   ├── VideoPlayerScreen.kt   # In-app video player (custom controls, ±10s, rotate, speed)
+│           │   │   │   ├── PdfViewerScreen.kt     # In-app PDF reader (PdfRenderer page bitmaps)
+│           │   │   │   ├── BookmarksScreen.kt     # Starred folders & files screen
 │           │   │   │   ├── RecentFilesScreen.kt   # Recently accessed files list
 │           │   │   │   ├── SettingsScreen.kt      # Theme toggle, sort order, hidden files preferences
 │           │   │   │   ├── TextViewerScreen.kt    # Built-in monospace text & code viewer
@@ -192,6 +197,16 @@ antigravity-file-manager/
 - Centered blue pill FAB with **New folder** and **New file** actions; `HomeHeader` offers menu, search and settings.
 - The folder list itself keeps a top bar with back-to-home, grid/list toggle, sort menu and overflow menu (search, paste, settings).
 
+### 18. 🎬 Built-in Viewers: Image, Audio, Video, PDF & Text (v2.4.0)
+- **Image viewer** (`ImageViewerScreen`): full-screen, pinch-to-zoom (1x–6x), pan, double-tap zoom, 90° rotation, blue action pill (Edit via system editor, Rotate), and the viewer top bar with share, favorite and the overflow menu (Use as, Open with, Move to Trash, Move to, Copy to, File info, Print).
+- **Audio player** (`AudioPlayerScreen`, Media3 ExoPlayer): embedded album art (with music-note placeholder), file name, seek bar with elapsed/total time, shuffle, previous, play/pause, next, repeat (off/all/one) and playback speed. All audio files of the same folder become the playlist.
+- **Video player** (`VideoPlayerScreen`, Media3 ExoPlayer + `PlayerView`): custom control bar with seek, elapsed/total time, -10s / +10s, play/pause, screen rotate toggle, buffering spinner, tap-to-toggle chrome, keep-screen-on, and playback speed in the overflow menu.
+- **PDF viewer** (`PdfViewerScreen`): renders every page with the platform `PdfRenderer` behind a mutex into white-bitmap images listed in a `LazyColumn`; shows the page count, handles password-protected/corrupt files gracefully, and supports print.
+- **Text viewer** upgraded to the shared chrome: copy-all, share, favorite, Open with, Move/Copy to, File info.
+- **Routing**: tapping a file in the list, recents, favorites or the home carousel opens the right viewer (`IMAGE`, `VIDEO`, `AUDIO`, `.pdf`, text) automatically; anything else falls back to the system "Open with" chooser.
+- **Shared helpers** (`ViewerChrome.kt`): `ViewerTopBar`, `ViewerMenuAction`, `formatPlaybackTime`, `shareFileExternally`, `openWithExternally`, `useImageAs`, `loadDownsampledBitmap`, `printBitmap` / `printFile` (androidx.print).
+- **File favorites**: files can now be starred from the list overflow or from any viewer, and `BookmarksScreen` opens file entries in their viewer instead of trying to navigate into them.
+
 ---
 
 ## 🔒 Permissions Handled
@@ -207,7 +222,19 @@ antigravity-file-manager/
 
 ## 🔄 Version Changelog
 
-### v2.3.0 (Current)
+### v2.4.0 (Current)
+- **Built-in viewers** for every common file type, all sharing the reference top bar (back, share, favorite, 3-dot menu):
+  - **Images** (`ImageViewerScreen`): pinch zoom, pan, double-tap zoom, rotate, Edit, Print, Use as.
+  - **Audio** (`AudioPlayerScreen`): ExoPlayer playlist of the folder, embedded album art, seek bar with times, shuffle/prev/play/next/repeat, playback speed.
+  - **Video** (`VideoPlayerScreen`): custom controls with seek timeline, ±10 seconds, play/pause, rotate, buffering indicator, playback speed.
+  - **PDF** (`PdfViewerScreen`): platform `PdfRenderer` pages in a scrollable list, page count, print, graceful error for locked/corrupt files.
+  - **Text/code** (`TextViewerScreen`): restyled with the shared chrome and copy-all.
+- **Overflow menu everywhere**: Use as, Open with, Move to Trash, Move to, Copy to, File info, Print, Playback speed (where relevant).
+- **Automatic routing** from the file list, recents, favorites and the home media carousel; unknown types still fall back to the system "Open with" chooser.
+- **File-level favorites**: files can be starred from the list or any viewer and are opened from the Favorites screen.
+- New dependencies: `androidx.media3:media3-exoplayer` + `media3-ui` (1.3.1) and `androidx.print:print` (1.0.0).
+
+### v2.3.0
 - **New home dashboard** modelled on the reference design: stories-style recent media carousel (`HomeDashboard.kt`), two-column Categories grid (Downloads / Images / Videos / Audio / Documents / Apps with live sizes), Collections (Starred, Recycle Bin) and an All storage section (Internal storage, Other storage).
 - **Centered action pill** on the home screen with New folder / New file, plus a minimal home header (menu, search, settings).
 - **Redesigned folder list** (`FileListItem`): 56dp rounded-square icon/thumbnail tiles, bold filenames and relative timestamps ("34 minutes ago", "Aug 5") via `FileItem.relativeDate`; top bar with back-to-home, grid/list, sort and overflow menus.

@@ -70,20 +70,21 @@ jobs:
             ## Antigravity Files v${{ steps.version.outputs.version }}
             🚀 **Native Android File Manager** built with Kotlin and Jetpack Compose.
 
-            ### 🎨 What's new in v2.3.0:
-            - **Stories-Style Home Screen**: A new dashboard with a horizontal recent-media carousel (rounded cards, filename, parent folder or **Downloaded** badge, play badge for videos, 3-dot menu).
-            - **Categories Grid**: Downloads, Images, Videos, Audio, Documents and Apps tiles with live sizes, opening the matching filter or folder.
-            - **Collections & All Storage**: Starred (Favorites), Recycle Bin, Internal storage and Other storage at a glance.
-            - **Redesigned Folder List**: 56dp rounded-square thumbnails, bold filenames and relative timestamps, plus a compact top bar (back-to-home, grid/list, sort, overflow).
-            - **Center Action Pill**: One centered blue pill for New folder and New file on the home screen.
-            - **Real Video Thumbnails**: `coil-video` frame decoding registered globally, so video cards show actual previews.
+            ### 🎬 What's new in v2.4.0:
+            - **Image Viewer**: full-screen viewer with pinch zoom, pan, double-tap zoom, rotate, Edit, Print and **Use as** — plus share, favorite and a 3-dot menu.
+            - **Audio Player**: plays the whole folder as a playlist with album art, seek bar, elapsed/total time, shuffle, previous/next, repeat and playback speed.
+            - **Video Player**: custom control bar with timeline seek, -10s / +10s, play/pause, screen rotation, buffering indicator and playback speed.
+            - **PDF Reader**: every page rendered in-app with page count, print support and a clear message for locked or corrupted files.
+            - **Text Viewer Refresh**: same top bar and menu as the other viewers, with copy-all, share and file info.
+            - **Universal Routing**: any file type opens the right viewer automatically; other formats fall back to the system "Open with" chooser.
+            - **Favorite Files**: star files from the list or from any viewer and open them from the Favorites screen.
 
             ### ✨ Feature Highlights:
+            - Stories-style home dashboard with recent media carousel and category grid
             - Multi-select batch operations (copy, cut/move, share, delete)
             - Favorites, Recent files, and a safe Recycle Bin with restore
             - Async Coil image/video thumbnails
             - Storage overview with per-category breakdown
-            - Built-in monospace text viewer
             - Light/Dark/System theming, hidden files toggle, persistent sort & layout
             - APK quick installer, copy-path, and quick file/folder creation
         env:

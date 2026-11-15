@@ -164,7 +164,7 @@ fun FileListItem(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false)
                 )
-                if (isBookmarked && item.isDirectory) {
+                if (isBookmarked) {
                     Spacer(modifier = Modifier.width(4.dp))
                     Icon(
                         imageVector = Icons.Default.Star,
@@ -202,19 +202,30 @@ fun FileListItem(
                     expanded = menuExpanded,
                     onDismissRequest = { menuExpanded = false }
                 ) {
+                    DropdownMenuItem(
+                        text = { Text(if (isBookmarked) "Remove from Favorites" else "Add to Favorites") },
+                        onClick = {
+                            menuExpanded = false
+                            onToggleBookmark()
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = if (isBookmarked) Icons.Outlined.StarBorder else Icons.Outlined.Star,
+                                contentDescription = null,
+                                tint = FolderYellow
+                            )
+                        }
+                    )
+
                     if (item.isDirectory) {
                         DropdownMenuItem(
-                            text = { Text(if (isBookmarked) "Remove from Favorites" else "Add to Favorites") },
+                            text = { Text("Open") },
                             onClick = {
                                 menuExpanded = false
-                                onToggleBookmark()
+                                onClick()
                             },
                             leadingIcon = {
-                                Icon(
-                                    imageVector = if (isBookmarked) Icons.Outlined.StarBorder else Icons.Outlined.Star,
-                                    contentDescription = null,
-                                    tint = FolderYellow
-                                )
+                                Icon(Icons.Default.FolderOpen, contentDescription = null)
                             }
                         )
                     } else {

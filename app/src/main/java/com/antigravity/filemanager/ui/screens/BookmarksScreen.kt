@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.InsertDriveFile
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -26,6 +27,7 @@ import java.io.File
 fun BookmarksScreen(
     bookmarks: List<String>,
     onNavigateTo: (File) -> Unit,
+    onOpenFile: (File) -> Unit,
     onRemoveBookmark: (String) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
@@ -66,7 +68,7 @@ fun BookmarksScreen(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Add folders to your favorites from the item options menu for quick access.",
+                        text = "Add folders and files to your favorites from the item options menu or any viewer for quick access.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
@@ -87,7 +89,9 @@ fun BookmarksScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(14.dp))
-                            .clickable { onNavigateTo(file) },
+                            .clickable {
+                                if (file.isDirectory) onNavigateTo(file) else onOpenFile(file)
+                            },
                         shape = RoundedCornerShape(14.dp),
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
@@ -100,8 +104,8 @@ fun BookmarksScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Folder,
-                                contentDescription = "Folder",
+                                imageVector = if (file.isDirectory) Icons.Default.Folder else Icons.Default.InsertDriveFile,
+                                contentDescription = if (file.isDirectory) "Folder" else "File",
                                 tint = FolderYellow,
                                 modifier = Modifier.size(36.dp)
                             )
