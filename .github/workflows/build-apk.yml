@@ -36,27 +36,28 @@ jobs:
       - name: Prepare APK for Release
         run: |
           mkdir -p build-artifacts
-          cp app/build/outputs/apk/debug/app-debug.apk build-artifacts/Antigravity-Files-v2.0.apk
+          cp app/build/outputs/apk/debug/app-debug.apk build-artifacts/Antigravity-Files-v2.1.apk
           ls -la build-artifacts/
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Antigravity-Files-Debug-APK
-          path: build-artifacts/Antigravity-Files-v2.0.apk
+          path: build-artifacts/Antigravity-Files-v2.1.apk
           retention-days: 30
 
       - name: Create GitHub Release
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v2.0.0
-          name: Antigravity Files v2.0.0
+          tag_name: v2.1.0
+          name: Antigravity Files v2.1.0
           body: |
-            ## Antigravity Files v2.0.0
+            ## Antigravity Files v2.1.0
             🚀 **Native Android File Manager** built with Kotlin and Jetpack Compose.
             
-            ### ✨ What's New in v2.0.0:
+            ### ✨ What's New in v2.1.0:
+            - **Custom Brand App Icon**: Modern 3D pearlescent folder icon with adaptive icon layers for Android 8.0+.
             - **Async Image Thumbnails**: Coil 2.6.0 async image loading & video thumbnails with play overlay.
             - **Multi-Select Mode**: Batch operations (Copy, Move, Share, Delete) with contextual bottom bar.
             - **Copy / Cut / Paste**: Full clipboard state with top app bar paste action & count badge.
