@@ -30,6 +30,7 @@ import androidx.core.content.FileProvider
 import com.antigravity.filemanager.BuildConfig
 import com.antigravity.filemanager.data.SortOption
 import com.antigravity.filemanager.model.FileItem
+import com.antigravity.filemanager.model.FileType
 import com.antigravity.filemanager.ui.components.*
 import com.antigravity.filemanager.ui.theme.FolderYellow
 import com.antigravity.filemanager.ui.viewmodel.FileManagerUiState
@@ -45,7 +46,11 @@ enum class AppScreen {
     RECENT_FILES,
     TRASH,
     SETTINGS,
-    TEXT_VIEWER
+    TEXT_VIEWER,
+    IMAGE_VIEWER,
+    AUDIO_PLAYER,
+    VIDEO_PLAYER,
+    PDF_VIEWER
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,7 +66,7 @@ fun MainFileScreen(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
     var currentScreen by rememberSaveable { mutableStateOf(AppScreen.FILES) }
-    var textViewerPath by rememberSaveable { mutableStateOf<String?>(null) }
+    var viewerPath by rememberSaveable { mutableStateOf<String?>(null) }
     var showDashboard by rememberSaveable { mutableStateOf(true) }
     var apkToInstall by remember { mutableStateOf<FileItem?>(null) }
 
@@ -136,20 +141,62 @@ fun MainFileScreen(
     }
 
     fun handleItemClick(item: FileItem) {
-        if (item.isDirectory) {
-            viewModel.navigateTo(item.file)
-        } else if (item.isTextFile) {
-            viewModel.recordRecentFile(item.file)
-            textViewerPath = item.path
-            currentScreen = AppScreen.TEXT_VIEWER
-        } else if (item.isApkFile) {
-            viewModel.recordRecentFile(item.file)
-            apkToInstall = item
-        } else {
-            viewModel.recordRecentFile(item.file)
-            openFileWithIntent(context, item.file)
+        when {
+            item.isDirectory -> viewModel.navigateTo(item.file)
+
+            item.isApkFile -> {
+                viewModel.recordRecentFile(item.file)
+                apkToInstall = item
+            }
+
+            else -> {
+                viewModel.recordRecentFile(item.file)
+                viewerPath = item.path
+                when {
+                    item.fileType == FileType.IMAGE -> currentScreen = AppScreen.IMAGE_VIEWER
+                    item.fileType == FileType.VIDEO -> currentScreen = AppScreen.VIDEO_PLAYER
+                    item.fileType == FileType.AUDIO -> currentScreen = AppScreen.AUDIO_PLAYER
+                    item.extension == "pdf" -> currentScreen = AppScreen.PDF_VIEWER
+                    item.isTextFile -> currentScreen = AppScreen.TEXT_VIEWER
+                    else -> {
+                        viewerPath = null
+                        openFileWithIntent(context, item.file)
+                    }
+                }
+            }
         }
     }
+
+    /** Shared helpers for the built-in media viewers. */
+    fun closeViewer() {
+        currentScreen = AppScreen.FILES
+    }
+
+    fun viewerFileItem(): FileItem? = viewerPath?.let { FileItem(File(it)) }
+
+    fun viewerMoveToTrash() {
+        val item = viewerFileItem() ?: return
+        viewModel.deleteFile(item)
+        currentScreen = AppScreen.FILES
+    }
+
+    fun viewerStageClipboard(cut: Boolean) {
+        val item = viewerFileItem() ?: return
+        if (cut) viewModel.cutFiles(listOf(item)) else viewModel.copyFiles(listOf(item))
+        currentScreen = AppScreen.FILES
+    }
+
+    fun viewerShowInfo() {
+        val item = viewerFileItem() ?: return
+        itemForDetails = item
+    }
+
+    fun viewerToggleFavorite() {
+        val path = viewerPath ?: return
+        viewModel.toggleBookmark(path)
+    }
+
+    val viewerIsFavorite = viewerPath?.let { uiState.bookmarks.contains(it) } == true
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -271,6 +318,10 @@ fun MainFileScreen(
                         showDashboard = false
                         viewModel.navigateTo(dir)
                     },
+                    onOpenFile = { file ->
+                        currentScreen = AppScreen.FILES
+                        handleItemClick(FileItem(file))
+                    },
                     onRemoveBookmark = viewModel::removeBookmark,
                     onBack = { currentScreen = AppScreen.FILES }
                 )
@@ -307,8 +358,62 @@ fun MainFileScreen(
             }
             AppScreen.TEXT_VIEWER -> {
                 TextViewerScreen(
-                    filePath = textViewerPath ?: "",
-                    onBack = { currentScreen = AppScreen.FILES }
+                    filePath = viewerPath ?: "",
+                    isFavorite = viewerIsFavorite,
+                    onBack = { closeViewer() },
+                    onToggleFavorite = { viewerToggleFavorite() },
+                    onMoveToTrash = { viewerMoveToTrash() },
+                    onMoveTo = { viewerStageClipboard(cut = true) },
+                    onCopyTo = { viewerStageClipboard(cut = false) },
+                    onShowInfo = { viewerShowInfo() }
+                )
+            }
+            AppScreen.IMAGE_VIEWER -> {
+                ImageViewerScreen(
+                    filePath = viewerPath ?: "",
+                    isFavorite = viewerIsFavorite,
+                    onBack = { closeViewer() },
+                    onToggleFavorite = { viewerToggleFavorite() },
+                    onMoveToTrash = { viewerMoveToTrash() },
+                    onMoveTo = { viewerStageClipboard(cut = true) },
+                    onCopyTo = { viewerStageClipboard(cut = false) },
+                    onShowInfo = { viewerShowInfo() }
+                )
+            }
+            AppScreen.AUDIO_PLAYER -> {
+                AudioPlayerScreen(
+                    filePath = viewerPath ?: "",
+                    isFavorite = viewerIsFavorite,
+                    onBack = { closeViewer() },
+                    onToggleFavorite = { viewerToggleFavorite() },
+                    onMoveToTrash = { viewerMoveToTrash() },
+                    onMoveTo = { viewerStageClipboard(cut = true) },
+                    onCopyTo = { viewerStageClipboard(cut = false) },
+                    onShowInfo = { viewerShowInfo() }
+                )
+            }
+            AppScreen.VIDEO_PLAYER -> {
+                VideoPlayerScreen(
+                    filePath = viewerPath ?: "",
+                    isFavorite = viewerIsFavorite,
+                    onBack = { closeViewer() },
+                    onToggleFavorite = { viewerToggleFavorite() },
+                    onMoveToTrash = { viewerMoveToTrash() },
+                    onMoveTo = { viewerStageClipboard(cut = true) },
+                    onCopyTo = { viewerStageClipboard(cut = false) },
+                    onShowInfo = { viewerShowInfo() }
+                )
+            }
+            AppScreen.PDF_VIEWER -> {
+                PdfViewerScreen(
+                    filePath = viewerPath ?: "",
+                    isFavorite = viewerIsFavorite,
+                    onBack = { closeViewer() },
+                    onToggleFavorite = { viewerToggleFavorite() },
+                    onMoveToTrash = { viewerMoveToTrash() },
+                    onMoveTo = { viewerStageClipboard(cut = true) },
+                    onCopyTo = { viewerStageClipboard(cut = false) },
+                    onShowInfo = { viewerShowInfo() }
                 )
             }
             AppScreen.FILES -> {
