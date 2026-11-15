@@ -20,6 +20,7 @@ val LightTextSecondary = Color(0xFF757575)
 
 // Category Accent Colors
 val FolderYellow = Color(0xFFFFB300)
+val FolderLavender = Color(0xFFC3C8FF)
 val ImagePink = Color(0xFFE91E63)
 val VideoPurple = Color(0xFF9C27B0)
 val AudioGreen = Color(0xFF4CAF50)

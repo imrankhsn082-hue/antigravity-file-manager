@@ -315,18 +315,25 @@ class FileManagerRepository {
         var apks = 0L
         var archives = 0L
         var others = 0L
+        var downloads = 0L
 
-        fun scan(dir: File, depth: Int = 0) {
+        fun scan(dir: File, depth: Int = 0, topFolder: String? = null) {
             if (depth > 6) return
             val children = dir.listFiles() ?: return
             for (child in children) {
                 if (child.name.startsWith(".")) continue
+                val childTopFolder = if (depth == 0) child.name else topFolder
                 if (child.isDirectory) {
                     if (child.name.equals("Android", ignoreCase = true)) continue
                     if (child.name.equals(".Trash", ignoreCase = true)) continue
-                    scan(child, depth + 1)
+                    scan(child, depth + 1, childTopFolder)
                 } else {
                     val len = child.length()
+                    if (childTopFolder.equals("Download", ignoreCase = true) ||
+                        childTopFolder.equals("Downloads", ignoreCase = true)
+                    ) {
+                        downloads += len
+                    }
                     val item = FileItem(child)
                     when (item.fileType) {
                         FileType.IMAGE -> images += len
@@ -351,11 +358,38 @@ class FileManagerRepository {
             apksSize = apks,
             archivesSize = archives,
             othersSize = others,
+            downloadsSize = downloads,
             totalTrackedSize = total
         )
         cachedBreakdown = breakdown
         cachedBreakdownTimestamp = now
         breakdown
+    }
+
+    /**
+     * Most recent images/videos from the usual media folders. Used by the home
+     * screen "stories" carousel.
+     */
+    suspend fun getRecentMedia(limit: Int = 12): List<FileItem> = withContext(Dispatchers.IO) {
+        val mediaRoots = listOf("DCIM", "Pictures", "Screenshots", "Download", "Movies")
+            .map { File(rootStorageDirectory, it) }
+
+        val candidates = mutableListOf<FileItem>()
+        var scanned = 0
+
+        scan@ for (dir in mediaRoots) {
+            if (!dir.exists() || !dir.canRead()) continue
+            for (file in dir.walkTopDown().maxDepth(3)) {
+                if (scanned++ > 4000) break@scan
+                if (!file.isFile || file.name.startsWith(".")) continue
+                val item = FileItem(file)
+                if (item.fileType == FileType.IMAGE || item.fileType == FileType.VIDEO) {
+                    candidates.add(item)
+                }
+            }
+        }
+
+        candidates.sortedByDescending { it.lastModified }.take(limit)
     }
 
     /** True when [candidate] is [source] itself or lives inside it. */

@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -27,7 +28,7 @@ import com.antigravity.filemanager.ui.theme.*
 
 fun getFileIconAndColor(fileType: FileType): Pair<ImageVector, Color> {
     return when (fileType) {
-        FileType.FOLDER -> Icons.Default.Folder to FolderYellow
+        FileType.FOLDER -> Icons.Default.Folder to FolderLavender
         FileType.IMAGE -> Icons.Default.Image to ImagePink
         FileType.VIDEO -> Icons.Default.VideoLibrary to VideoPurple
         FileType.AUDIO -> Icons.Default.MusicNote to AudioGreen
@@ -97,9 +98,9 @@ fun FileListItem(
         // Thumbnail / Icon
         Box(
             modifier = Modifier
-                .size(46.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(tintColor.copy(alpha = 0.15f)),
+                .size(56.dp)
+                .clip(RoundedCornerShape(18.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f)),
             contentAlignment = Alignment.Center
         ) {
             when (item.fileType) {
@@ -142,13 +143,13 @@ fun FileListItem(
                         imageVector = icon,
                         contentDescription = item.fileType.name,
                         tint = tintColor,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(26.dp)
                     )
                 }
             }
         }
 
-        Spacer(modifier = Modifier.width(14.dp))
+        Spacer(modifier = Modifier.width(16.dp))
 
         Column(
             modifier = Modifier.weight(1f)
@@ -156,7 +157,8 @@ fun FileListItem(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = item.name,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -174,7 +176,11 @@ fun FileListItem(
             }
             Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = "${item.formattedSize} • ${item.formattedDate}",
+                text = if (item.isDirectory) {
+                    item.relativeDate
+                } else {
+                    "${item.formattedSize} • ${item.relativeDate}"
+                },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
