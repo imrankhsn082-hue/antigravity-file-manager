@@ -104,7 +104,7 @@ private fun supportedTrackChoices(tracks: Tracks?, type: Int): List<TrackChoice>
     tracks.groups
         .filter { it.type == type }
         .forEach { group ->
-            group.formats.indices.forEach { index ->
+            for (index in 0 until group.length) {
                 if (group.isTrackSupported(index)) {
                     val format = group.getTrackFormat(index)
                     val label = format.label?.takeIf { it.isNotBlank() }
