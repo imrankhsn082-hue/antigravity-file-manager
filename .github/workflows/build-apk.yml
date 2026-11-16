@@ -70,14 +70,12 @@ jobs:
             ## Antigravity Files v${{ steps.version.outputs.version }}
             🚀 **Native Android File Manager** built with Kotlin and Jetpack Compose.
 
-            ### 🎬 What's new in v2.4.0:
-            - **Image Viewer**: full-screen viewer with pinch zoom, pan, double-tap zoom, rotate, Edit, Print and **Use as** — plus share, favorite and a 3-dot menu.
-            - **Audio Player**: plays the whole folder as a playlist with album art, seek bar, elapsed/total time, shuffle, previous/next, repeat and playback speed.
-            - **Video Player**: custom control bar with timeline seek, -10s / +10s, play/pause, screen rotation, buffering indicator and playback speed.
-            - **PDF Reader**: every page rendered in-app with page count, print support and a clear message for locked or corrupted files.
-            - **Text Viewer Refresh**: same top bar and menu as the other viewers, with copy-all, share and file info.
-            - **Universal Routing**: any file type opens the right viewer automatically; other formats fall back to the system "Open with" chooser.
-            - **Favorite Files**: star files from the list or from any viewer and open them from the Favorites screen.
+            ### 🔊 What's new in v2.5.0:
+            - **Sound Boost Bar**: a separate speaker button opens a 0–200% volume slider — 100% is normal loudness and the extra range adds up to +12 dB gain with `LoudnessEnhancer` for quiet videos.
+            - **Dual Audio Switching**: videos with more than one audio track show a headphones button that lists every supported track (plus **Automatic**), and the overflow menu lets you cycle through them.
+            - **Subtitle Selection**: embedded subtitle tracks appear behind a CC button with an **Off** option, and the overflow menu cycles Off → track 1 → track 2.
+            - **Add External Subtitles**: "Add subtitle file…" opens the document picker for `.srt`, `.vtt`, `.ass`, `.ssa` or `.ttml` files, attaches them to the current video without losing your place, and can remove them again.
+            - **Everything else from v2.4.0**: image, audio, video, PDF and text viewers, universal file routing and file favorites.
 
             ### ✨ Feature Highlights:
             - Stories-style home dashboard with recent media carousel and category grid
