@@ -11,7 +11,7 @@
 
 - **App Name:** Antigravity Files (Android File Manager)
 - **Package Name:** `com.antigravity.filemanager`
-- **Current Version:** `2.4.0` (versionCode: `6`)
+- **Current Version:** `2.5.0` (versionCode: `7`)
 - **Primary Language:** Kotlin (1.9.24)
 - **UI Toolkit:** Jetpack Compose (Material 3, BOM `2024.06.00`)
 - **Min SDK:** 26 (Android 8.0 Oreo)
@@ -78,7 +78,7 @@ antigravity-file-manager/
 │           │   │   │   ├── MainFileScreen.kt      # Primary dashboard, Drawer, Multi-select bar, FABs, file routing
 │           │   │   │   ├── ImageViewerScreen.kt   # Full screen image viewer (pinch zoom, pan, rotate, edit, print)
 │           │   │   │   ├── AudioPlayerScreen.kt   # In-app audio player (artwork, playlist, shuffle, repeat, speed)
-│           │   │   │   ├── VideoPlayerScreen.kt   # In-app video player (custom controls, ±10s, rotate, speed)
+│           │   │   │   ├── VideoPlayerScreen.kt   # In-app video player (custom controls, ±10s, rotate, speed, volume boost, audio & subtitle tracks)
 │           │   │   │   ├── PdfViewerScreen.kt     # In-app PDF reader (PdfRenderer page bitmaps)
 │           │   │   │   ├── BookmarksScreen.kt     # Starred folders & files screen
 │           │   │   │   ├── RecentFilesScreen.kt   # Recently accessed files list
@@ -201,6 +201,9 @@ antigravity-file-manager/
 - **Image viewer** (`ImageViewerScreen`): full-screen, pinch-to-zoom (1x–6x), pan, double-tap zoom, 90° rotation, blue action pill (Edit via system editor, Rotate), and the viewer top bar with share, favorite and the overflow menu (Use as, Open with, Move to Trash, Move to, Copy to, File info, Print).
 - **Audio player** (`AudioPlayerScreen`, Media3 ExoPlayer): embedded album art (with music-note placeholder), file name, seek bar with elapsed/total time, shuffle, previous, play/pause, next, repeat (off/all/one) and playback speed. All audio files of the same folder become the playlist.
 - **Video player** (`VideoPlayerScreen`, Media3 ExoPlayer + `PlayerView`): custom control bar with seek, elapsed/total time, -10s / +10s, play/pause, screen rotate toggle, buffering spinner, tap-to-toggle chrome, keep-screen-on, and playback speed in the overflow menu.
+- **Sound boost** (v2.5.0): a separate volume slider (0–200%) under the speaker button. 0–100% drives `ExoPlayer.volume`; above 100% a `LoudnessEnhancer` (up to +1200 mB) lifts quiet movies/tracks without touching the system volume. The enhanced session is tracked through `player.audioSessionId` and released on dispose.
+- **Dual audio switching** (v2.5.0): every supported audio track of the current video is listed (label → language → track number) behind the headphones button and in the overflow menu; selecting one applies a `TrackSelectionOverride`, "Automatic" clears the override. Videos with a single track show a toast instead of an empty menu.
+- **Subtitles** (v2.5.0): embedded subtitle tracks are listed behind the CC button with an "Off" entry that disables `C.TRACK_TYPE_TEXT`; the overflow menu cycles Off → track 1 → track 2 → Off. If the file has no embedded subtitle, the menu offers **"Add subtitle file…"**, which opens the system document picker and attaches an external `.srt` / `.vtt` / `.ass` / `.ssa` / `.ttml` file as a `SubtitleConfiguration` (MIME type detected from the file extension), reloading the media item at the current position. A **"Remove added subtitle"** action detaches it again.
 - **PDF viewer** (`PdfViewerScreen`): renders every page with the platform `PdfRenderer` behind a mutex into white-bitmap images listed in a `LazyColumn`; shows the page count, handles password-protected/corrupt files gracefully, and supports print.
 - **Text viewer** upgraded to the shared chrome: copy-all, share, favorite, Open with, Move/Copy to, File info.
 - **Routing**: tapping a file in the list, recents, favorites or the home carousel opens the right viewer (`IMAGE`, `VIDEO`, `AUDIO`, `.pdf`, text) automatically; anything else falls back to the system "Open with" chooser.
@@ -217,12 +220,20 @@ antigravity-file-manager/
 | `READ_EXTERNAL_STORAGE` | API 26 - 32 | Read files on legacy Android versions |
 | `WRITE_EXTERNAL_STORAGE` | API 26 - 29 | Write/Modify files on legacy Android versions |
 | `REQUEST_INSTALL_PACKAGES`| API 26+ | Ability to trigger package installation for APK files |
+| `MODIFY_AUDIO_SETTINGS` | API 26+ | Attach the `LoudnessEnhancer` audio effect used by the video player sound boost |
 
 ---
 
 ## 🔄 Version Changelog
 
-### v2.4.0 (Current)
+### v2.5.0 (Current)
+- **Video player audio & subtitle upgrade**:
+  - **Separate sound boost bar**: speaker button toggles a 0–200% volume slider. Up to 100% it drives the player volume; above 100% an `LoudnessEnhancer` adds up to +1200 mB gain for quiet videos, then the effect is released on dispose. Requires `MODIFY_AUDIO_SETTINGS`.
+  - **Dual / multi audio track switching**: a headphones button (and the overflow menu) lists every supported audio track with an "Automatic" reset option, applied through `TrackSelectionOverride`.
+  - **Subtitle select / change / off**: a CC button lists the embedded subtitle tracks plus "Off", and the overflow menu cycles through them.
+  - **External subtitle files**: "Add subtitle file…" picks an `.srt` / `.vtt` / `.ass` / `.ssa` / `.ttml` document, detects its MIME type and attaches it as a `MediaItem.SubtitleConfiguration` while keeping the current playback position; "Remove added subtitle" detaches it.
+
+### v2.4.0
 - **Built-in viewers** for every common file type, all sharing the reference top bar (back, share, favorite, 3-dot menu):
   - **Images** (`ImageViewerScreen`): pinch zoom, pan, double-tap zoom, rotate, Edit, Print, Use as.
   - **Audio** (`AudioPlayerScreen`): ExoPlayer playlist of the folder, embedded album art, seek bar with times, shuffle/prev/play/next/repeat, playback speed.

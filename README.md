@@ -6,9 +6,9 @@ A modern, fast, and feature-rich **Native Android File Manager** built with **Ko
 
 ---
 
-## ✨ Features (v2.4.0)
+## ✨ Features (v2.5.0)
 
-- **🎬 Built-in Media Viewers:** Full-screen **image viewer** (pinch zoom, pan, rotate, edit, print, "Use as"), **audio player** (album art, seek bar, shuffle/prev/play/next/repeat, speed), **video player** (custom controls, ±10s, rotate, speed) and **PDF reader** — all with share, favorites and a 3-dot menu.
+- **🎬 Built-in Media Viewers:** Full-screen **image viewer** (pinch zoom, pan, rotate, edit, print, "Use as"), **audio player** (album art, seek bar, shuffle/prev/play/next/repeat, speed), **video player** (custom controls, ±10s, rotate, speed, **200% sound boost**, **dual-audio track switching**, **embedded & external subtitles**) and **PDF reader** — all with share, favorites and a 3-dot menu.
 - **📄 Universal File Opening:** Tapping any file picks the right built-in viewer automatically; unknown formats still open through the system "Open with" chooser.
 - **🏠 Stories-Style Home Dashboard:** The app opens on a redesigned home with a horizontally scrolling recent-media carousel (rounded cards, filename, parent folder or **Downloaded** badge, play badge for videos, 3-dot menu), a two-column **Categories** grid (Downloads, Images, Videos, Audio, Documents, Apps with live sizes), **Collections** (Starred, Recycle Bin) and an **All storage** section (Internal storage, Other storage).
 - **🎯 Center Action Pill:** One centered blue pill FAB on the home screen for **New folder** and **New file**.
@@ -56,7 +56,7 @@ This project is configured with GitHub Actions (`.github/workflows/build-apk.yml
 1. GitHub spins up a Linux VM with JDK 17 & Gradle 8.7.
 2. Reads `versionName` from `app/build.gradle.kts`.
 3. Compiles the native Android application.
-4. Packages the APK (`Antigravity-Files-v<version>.apk`, e.g. `Antigravity-Files-v2.4.0.apk`).
+4. Packages the APK (`Antigravity-Files-v<version>.apk`, e.g. `Antigravity-Files-v2.5.0.apk`).
 5. Generates a downloadable **GitHub Artifact** and a **GitHub Release** tagged with that version.
 
 ### 🖥️ Local builds
